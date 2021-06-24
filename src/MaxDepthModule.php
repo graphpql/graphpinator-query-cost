@@ -53,7 +53,7 @@ final class MaxDepthModule implements \Graphpinator\Module\Module
             }
 
             if ($fieldDepth > $this->maxDepth) {
-                throw new \Graphpinator\QueryCost\Exception\MaximalDepthWasReached();
+                throw new \Graphpinator\QueryCost\Exception\MaximalDepthWasReached($this->maxDepth);
             }
 
             ++$fieldDepth;

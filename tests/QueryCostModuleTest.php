@@ -149,9 +149,9 @@ final class QueryCostModuleTest extends \PHPUnit\Framework\TestCase
 
     public function testException() : void
     {
-        $exception = new \Graphpinator\QueryCost\Exception\MaximalDepthWasReached();
+        $exception = new \Graphpinator\QueryCost\Exception\MaximalDepthWasReached(5);
 
         self::assertTrue($exception->isOutputable());
-        self::assertSame('Maximal fields depth was reached.', $exception::MESSAGE);
+        self::assertSame('Maximal fields depth 5 was reached.', $exception->getMessage());
     }
 }
