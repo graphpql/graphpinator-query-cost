@@ -4,11 +4,15 @@ declare(strict_types = 1);
 
 namespace Graphpinator\QueryCost;
 
-final class QueryCostModule implements \Graphpinator\Module\Module
+use \Graphpinator\QueryCost\Exception\MaximalDepthWasReached;
+
+final class MaxDepthModule implements \Graphpinator\Module\Module
 {
     use \Nette\SmartObject;
 
-    public function __construct(private int $depth)
+    public function __construct(
+        private int $maxDepth,
+    )
     {
     }
 
@@ -24,22 +28,8 @@ final class QueryCostModule implements \Graphpinator\Module\Module
 
     public function processNormalized(\Graphpinator\Normalizer\NormalizedRequest $request) : \Graphpinator\Normalizer\NormalizedRequest
     {
-        $fieldDepth = 0;
-
-        foreach ($request->getOperations()->toArray() as $operation) {
-            foreach ($operation->getFields() as $field) {
-                $currentFieldSet = $field->getFields();
-
-                if ($currentFieldSet === null) {
-                    continue;
-                }
-
-                if ($this->validateDepth($fieldDepth)) {
-                    ++$fieldDepth;
-                }
-
-                $fieldDepth = $this->countDepth($fieldDepth, $currentFieldSet);
-            }
+        foreach ($request->getOperations() as $operation) {
+            $this->countDepth(1, $operation->getFields());
         }
 
         return $request;
@@ -55,7 +45,7 @@ final class QueryCostModule implements \Graphpinator\Module\Module
         return $result;
     }
 
-    private function countDepth(int $fieldDepth, \Graphpinator\Normalizer\Field\FieldSet $fieldSet) : int
+    private function countDepth(int $fieldDepth, \Graphpinator\Normalizer\Field\FieldSet $fieldSet) : void
     {
         foreach ($fieldSet as $field) {
             $currentFieldSet = $field->getFields();
@@ -64,20 +54,12 @@ final class QueryCostModule implements \Graphpinator\Module\Module
                 continue;
             }
 
-            if ($this->validateDepth($fieldDepth)) {
-                ++$fieldDepth;
+            if ($fieldDepth > $this->maxDepth) {
+                throw new MaximalDepthWasReached();
             }
 
+            ++$fieldDepth;
             $this->countDepth($fieldDepth, $currentFieldSet);
         }
-
-        return $fieldDepth;
-    }
-
-    private function validateDepth(int $fieldDepth) : bool
-    {
-        return $this->depth >= $fieldDepth
-            ? true
-            : throw new \Graphpinator\Module\QueryCost\Exception\MaximalDepthWasReached();
     }
 }
