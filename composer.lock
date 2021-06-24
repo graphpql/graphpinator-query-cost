@@ -4,27 +4,27 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3dbb9c9cae88696e307e6d96f75ab93d",
+    "content-hash": "4edf53ecbcfb28d646e6367389486840",
     "packages": [
         {
             "name": "infinityloop-dev/graphpinator",
-            "version": "v1.0-rc30",
+            "version": "v1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/infinityloop-dev/graphpinator.git",
-                "reference": "5d10857f4bfa43afbd00996f068867f4dad7c811"
+                "reference": "c239234ad1a9aa690b3508cb5c9a05c4967dfbe0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/infinityloop-dev/graphpinator/zipball/5d10857f4bfa43afbd00996f068867f4dad7c811",
-                "reference": "5d10857f4bfa43afbd00996f068867f4dad7c811",
+                "url": "https://api.github.com/repos/infinityloop-dev/graphpinator/zipball/c239234ad1a9aa690b3508cb5c9a05c4967dfbe0",
+                "reference": "c239234ad1a9aa690b3508cb5c9a05c4967dfbe0",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
                 "infinityloop-dev/graphpinator-common": "^1.2",
                 "infinityloop-dev/graphpinator-parser": "^1.0",
-                "infinityloop-dev/utils": "^2.1.2",
+                "infinityloop-dev/utils": "^2.2",
                 "nette/utils": "^3.2",
                 "php": ">=8.0.1",
                 "psr/http-message": "^1.0.1",
@@ -70,9 +70,9 @@
             "homepage": "https://www.infinityloop.dev/",
             "support": {
                 "issues": "https://github.com/infinityloop-dev/graphpinator/issues",
-                "source": "https://github.com/infinityloop-dev/graphpinator/tree/v1.0-rc30"
+                "source": "https://github.com/infinityloop-dev/graphpinator/tree/v1.0"
             },
-            "time": "2021-06-22T14:13:34+00:00"
+            "time": "2021-06-24T16:55:56+00:00"
         },
         {
             "name": "infinityloop-dev/graphpinator-common",
@@ -281,16 +281,16 @@
         },
         {
             "name": "infinityloop-dev/utils",
-            "version": "v2.1.2",
+            "version": "v2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/infinityloop-dev/utils.git",
-                "reference": "fc1bf9cec56dde8af81ca993d8b64ce8a3ec29ab"
+                "reference": "5ac9ae283d36aa0c55ac7b478f28f36681338383"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/infinityloop-dev/utils/zipball/fc1bf9cec56dde8af81ca993d8b64ce8a3ec29ab",
-                "reference": "fc1bf9cec56dde8af81ca993d8b64ce8a3ec29ab",
+                "url": "https://api.github.com/repos/infinityloop-dev/utils/zipball/5ac9ae283d36aa0c55ac7b478f28f36681338383",
+                "reference": "5ac9ae283d36aa0c55ac7b478f28f36681338383",
                 "shasum": ""
             },
             "require": {
@@ -324,9 +324,9 @@
             "homepage": "https://www.infinityloop.dev/",
             "support": {
                 "issues": "https://github.com/infinityloop-dev/utils/issues",
-                "source": "https://github.com/infinityloop-dev/utils/tree/v2.1.2"
+                "source": "https://github.com/infinityloop-dev/utils/tree/v2.2"
             },
-            "time": "2020-12-07T15:29:38+00:00"
+            "time": "2021-06-24T16:47:55+00:00"
         },
         {
             "name": "nette/utils",
@@ -4834,9 +4834,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "infinityloop-dev/graphpinator": 5
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],
