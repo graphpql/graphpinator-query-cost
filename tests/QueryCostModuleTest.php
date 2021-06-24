@@ -66,7 +66,7 @@ final class QueryCostModuleTest extends \PHPUnit\Framework\TestCase
         $graphpinator = new \Graphpinator\Graphpinator(
             $schema,
             false,
-            new \Graphpinator\Module\ModuleSet([new \Graphpinator\QueryCost\MaxDepthModule(5)]),
+            new \Graphpinator\Module\ModuleSet([new \Graphpinator\QueryCost\MaxDepthModule(3)]),
         );
         $result = $graphpinator->run(new \Graphpinator\Request\JsonRequestFactory(\Infinityloop\Utils\Json::fromNative((object) [
             'query' => '{ field { field { field { scalar } } } }',

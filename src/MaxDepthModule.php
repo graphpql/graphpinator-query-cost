@@ -4,8 +4,6 @@ declare(strict_types = 1);
 
 namespace Graphpinator\QueryCost;
 
-use \Graphpinator\QueryCost\Exception\MaximalDepthWasReached;
-
 final class MaxDepthModule implements \Graphpinator\Module\Module
 {
     use \Nette\SmartObject;
@@ -55,7 +53,7 @@ final class MaxDepthModule implements \Graphpinator\Module\Module
             }
 
             if ($fieldDepth > $this->maxDepth) {
-                throw new MaximalDepthWasReached();
+                throw new \Graphpinator\QueryCost\Exception\MaximalDepthWasReached();
             }
 
             ++$fieldDepth;
