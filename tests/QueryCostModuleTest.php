@@ -146,4 +146,12 @@ final class QueryCostModuleTest extends \PHPUnit\Framework\TestCase
              'query' => '{ field { field { field { scalar } } } }',
         ])));
     }
+
+    public function testException() : void
+    {
+        $exception = new \Graphpinator\QueryCost\Exception\MaximalDepthWasReached(5);
+
+        self::assertTrue($exception->isOutputable());
+        self::assertSame('Maximal fields depth 5 was reached.', $exception->getMessage());
+    }
 }
