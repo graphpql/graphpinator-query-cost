@@ -75,7 +75,7 @@ final class QueryCostModule implements \Graphpinator\Module\Module
             $this->validateQueryCost($queryCost);
 
             ++$queryCost;
-            $this->countDepth($queryCost, $currentFieldSet);
+            $this->countCost($queryCost, $currentFieldSet);
         }
     }
 
