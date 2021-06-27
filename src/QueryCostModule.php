@@ -8,6 +8,11 @@ final class QueryCostModule implements \Graphpinator\Module\Module
 {
     use \Nette\SmartObject;
 
+    private const ARGUMENT_NAMES = [
+        'limit',
+        'first',
+        'last',
+    ];
     private array $argumentValues = [];
 
     public function __construct(
@@ -49,7 +54,7 @@ final class QueryCostModule implements \Graphpinator\Module\Module
             foreach ($field->getArguments() as $argument) {
                 $currentArgumentName = $argument->getArgument()->getName();
 
-                if ($currentArgumentName !== 'limit' && $currentArgumentName !== 'first' && $currentArgumentName !== 'last') {
+                if (!\in_array($currentArgumentName, self::ARGUMENT_NAMES)) {
                     continue;
                 }
 
