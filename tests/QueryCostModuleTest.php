@@ -20,10 +20,15 @@ final class QueryCostModuleTest extends \PHPUnit\Framework\TestCase
                     \Graphpinator\Typesystem\Field\ResolvableField::create(
                         'field',
                         $this,
-                        static function ($parent) : int {
+                        static function ($parent, $limit) : int {
                             return 1;
                         },
-                    ),
+                    )->setArguments(new \Graphpinator\Typesystem\Argument\ArgumentSet([
+                        \Graphpinator\Argument\Argument::create(
+                            'limit',
+                            \Graphpinator\Container\Container::Int(),
+                        ),
+                    ])),
                     \Graphpinator\Typesystem\Field\ResolvableField::create(
                         'scalar',
                         \Graphpinator\Container\Container::Int()->notNull(),
@@ -66,10 +71,10 @@ final class QueryCostModuleTest extends \PHPUnit\Framework\TestCase
         $graphpinator = new \Graphpinator\Graphpinator(
             $schema,
             false,
-            new \Graphpinator\Module\ModuleSet([new \Graphpinator\QueryCost\MaxDepthModule(3)]),
+            new \Graphpinator\Module\ModuleSet([new \Graphpinator\QueryCost\QueryCostModule(50)]),
         );
         $result = $graphpinator->run(new \Graphpinator\Request\JsonRequestFactory(\Infinityloop\Utils\Json::fromNative((object) [
-            'query' => '{ field { field { field { scalar } } } }',
+            'query' => '{ field { field { field(limit: 10) { scalar } } } }',
         ])));
 
         self::assertSame(
@@ -80,7 +85,7 @@ final class QueryCostModuleTest extends \PHPUnit\Framework\TestCase
 
     public function testInvalid() : void
     {
-        $this->expectException(\Graphpinator\QueryCost\Exception\MaximalDepthWasReached::class);
+        $this->expectException(\Graphpinator\QueryCost\Exception\MaximalQueryCostWasReached::class);
 
         $type = new class extends \Graphpinator\Typesystem\Type {
             public function validateNonNullValue(mixed $rawValue) : bool
@@ -97,7 +102,12 @@ final class QueryCostModuleTest extends \PHPUnit\Framework\TestCase
                         static function ($parent) : int {
                             return 1;
                         },
-                    ),
+                    )->setArguments(new \Graphpinator\Typesystem\Argument\ArgumentSet([
+                        \Graphpinator\Argument\Argument::create(
+                            'limit',
+                            \Graphpinator\Container\Container::Int(),
+                        ),
+                    ])),
                     \Graphpinator\Typesystem\Field\ResolvableField::create(
                         'scalar',
                         \Graphpinator\Container\Container::Int()->notNull(),
@@ -140,18 +150,18 @@ final class QueryCostModuleTest extends \PHPUnit\Framework\TestCase
         $graphpinator = new \Graphpinator\Graphpinator(
             $schema,
             false,
-            new \Graphpinator\Module\ModuleSet([new \Graphpinator\QueryCost\MaxDepthModule(2)]),
+            new \Graphpinator\Module\ModuleSet([new \Graphpinator\QueryCost\QueryCostModule(10)]),
         );
         $graphpinator->run(new \Graphpinator\Request\JsonRequestFactory(\Infinityloop\Utils\Json::fromNative((object) [
-             'query' => '{ field { field { field { scalar } } } }',
+            'query' => '{ field { field { field(limit: 10) { scalar } } } }',
         ])));
     }
 
     public function testException() : void
     {
-        $exception = new \Graphpinator\QueryCost\Exception\MaximalDepthWasReached(5);
+        $exception = new \Graphpinator\QueryCost\Exception\MaximalQueryCostWasReached(10);
 
         self::assertTrue($exception->isOutputable());
-        self::assertSame('Maximal fields depth 5 was reached.', $exception->getMessage());
+        self::assertSame('Maximal query cost 10 was reached.', $exception->getMessage());
     }
 }
