@@ -59,7 +59,7 @@ final class QueryCostModule implements \Graphpinator\Module\Module
             $currentFieldSet = $field->getFields();
 
             if ($currentFieldSet === null) {
-                if (\count($this->argumentValues) > 0) {
+                while (\count($this->argumentValues) > 0) {
                     $argumentValue = \array_pop($this->argumentValues);
 
                     if ($argumentValue !== null) {
@@ -79,10 +79,10 @@ final class QueryCostModule implements \Graphpinator\Module\Module
         }
     }
 
-    private function validateQueryCost(int $queryCost) : bool|\Graphpinator\QueryCost\Exception\MaximalQueryCostWasReached
+    private function validateQueryCost(int $queryCost) : void
     {
-        return $queryCost > $this->maxCostDepth
-            ? throw new \Graphpinator\QueryCost\Exception\MaximalQueryCostWasReached($this->maxCostDepth)
-            : true;
+        if ($queryCost > $this->maxCostDepth) {
+            throw new \Graphpinator\QueryCost\Exception\MaximalQueryCostWasReached($this->maxCostDepth);
+        }
     }
 }

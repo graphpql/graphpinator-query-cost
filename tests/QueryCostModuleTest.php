@@ -18,7 +18,7 @@ final class QueryCostModuleTest extends \PHPUnit\Framework\TestCase
             {
                 return new \Graphpinator\Typesystem\Field\ResolvableFieldSet([
                     \Graphpinator\Typesystem\Field\ResolvableField::create(
-                        'field',
+                        'fieldA',
                         $this,
                         static function ($parent, $limit) : int {
                             return 1;
@@ -26,6 +26,30 @@ final class QueryCostModuleTest extends \PHPUnit\Framework\TestCase
                     )->setArguments(new \Graphpinator\Typesystem\Argument\ArgumentSet([
                         \Graphpinator\Argument\Argument::create(
                             'limit',
+                            \Graphpinator\Container\Container::Int(),
+                        ),
+                    ])),
+                    \Graphpinator\Typesystem\Field\ResolvableField::create(
+                        'fieldB',
+                        $this,
+                        static function ($parent, $first) : int {
+                            return 1;
+                        },
+                    )->setArguments(new \Graphpinator\Typesystem\Argument\ArgumentSet([
+                        \Graphpinator\Argument\Argument::create(
+                            'first',
+                            \Graphpinator\Container\Container::Int(),
+                        ),
+                    ])),
+                    \Graphpinator\Typesystem\Field\ResolvableField::create(
+                        'fieldC',
+                        $this,
+                        static function ($parent, $last) : int {
+                            return 1;
+                        },
+                    )->setArguments(new \Graphpinator\Typesystem\Argument\ArgumentSet([
+                        \Graphpinator\Argument\Argument::create(
+                            'last',
                             \Graphpinator\Container\Container::Int(),
                         ),
                     ])),
@@ -71,14 +95,15 @@ final class QueryCostModuleTest extends \PHPUnit\Framework\TestCase
         $graphpinator = new \Graphpinator\Graphpinator(
             $schema,
             false,
-            new \Graphpinator\Module\ModuleSet([new \Graphpinator\QueryCost\QueryCostModule(50)]),
+            new \Graphpinator\Module\ModuleSet([new \Graphpinator\QueryCost\QueryCostModule(600)]),
         );
         $result = $graphpinator->run(new \Graphpinator\Request\JsonRequestFactory(\Infinityloop\Utils\Json::fromNative((object) [
-            'query' => '{ field { field { field(limit: 10) { scalar } } } }',
+            'query' => '{ field { fieldA { fieldA(limit: 10) { fieldB(first: 5) { fieldC(last: 2) { scalar } } } } } }',
         ])));
 
         self::assertSame(
-            \Infinityloop\Utils\Json::fromNative((object) ['data' => ['field' => ['field' => ['field' => ['scalar' => 1]]]]])->toString(),
+            \Infinityloop\Utils\Json::fromNative((object) ['data' => ['field' => ['fieldA' => ['fieldA' => ['fieldB' => ['fieldC' => ['scalar' => 1]]]]]]]
+            )->toString(),
             $result->toString(),
         );
     }
