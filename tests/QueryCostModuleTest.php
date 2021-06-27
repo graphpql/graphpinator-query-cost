@@ -102,7 +102,8 @@ final class QueryCostModuleTest extends \PHPUnit\Framework\TestCase
         ])));
 
         self::assertSame(
-            \Infinityloop\Utils\Json::fromNative((object) ['data' => ['field' => ['fieldA' => ['fieldA' => ['fieldB' => ['fieldC' => ['scalar' => 1]]]]]]]
+            \Infinityloop\Utils\Json::fromNative(
+                (object) ['data' => ['field' => ['fieldA' => ['fieldA' => ['fieldB' => ['fieldC' => ['scalar' => 1]]]]]]],
             )->toString(),
             $result->toString(),
         );
