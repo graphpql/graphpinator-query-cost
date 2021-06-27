@@ -66,23 +66,16 @@ final class QueryCostModule implements \Graphpinator\Module\Module
                         $queryCost *= $argumentValue;
                     }
 
-                    $this->validateQueryCost($queryCost);
+                    if ($queryCost > $this->maxCostDepth) {
+                        throw new \Graphpinator\QueryCost\Exception\MaximalQueryCostWasReached($this->maxCostDepth);
+                    }
                 }
 
                 continue;
             }
 
-            $this->validateQueryCost($queryCost);
-
             ++$queryCost;
             $this->countCost($queryCost, $currentFieldSet);
-        }
-    }
-
-    private function validateQueryCost(int $queryCost) : void
-    {
-        if ($queryCost > $this->maxCostDepth) {
-            throw new \Graphpinator\QueryCost\Exception\MaximalQueryCostWasReached($this->maxCostDepth);
         }
     }
 }
