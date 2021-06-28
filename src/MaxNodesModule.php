@@ -59,12 +59,15 @@ final class MaxNodesModule implements \Graphpinator\Module\Module
             }
 
             $currentArguments = $field->getArguments();
+
             if ($currentArguments->count() >= 1) {
                 foreach ($currentArguments as $argument) {
                     $currentArgumentName = $argument->getArgument()->getName();
 
                     if (\in_array($currentArgumentName, self::ARGUMENT_NAMES)) {
-                        if (!\is_null($argument->getValue()->getRawValue())) {
+                        $argumentRawValue = $argument->getValue()->getRawValue();
+
+                        if (\is_int($argumentRawValue) && $argumentRawValue > 0) {
                             $this->actualQueryCost === 0
                                 ? $this->actualQueryCost = $queryCost * $argument->getValue()->getRawValue()
                                 : $this->actualQueryCost *= $argument->getValue()->getRawValue();
