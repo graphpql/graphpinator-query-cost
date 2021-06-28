@@ -38,7 +38,11 @@ final class MaxNodesModule implements \Graphpinator\Module\Module
 
     public function processFinalized(\Graphpinator\Normalizer\FinalizedRequest $request) : \Graphpinator\Normalizer\FinalizedRequest
     {
-        $this->countCost(1, $request->getOperation()->getFields());
+        $queryCost = $this->countCost(1, $request->getOperation()->getFields());
+
+        if ($queryCost > $this->maxQueryCost) {
+            throw new \Graphpinator\QueryCost\Exception\MaximalQueryCostWasReached($queryCost);
+        }
 
         return $request;
     }
@@ -48,16 +52,17 @@ final class MaxNodesModule implements \Graphpinator\Module\Module
         return $result;
     }
 
-    private function countCost(int $queryCost, \Graphpinator\Normalizer\Field\FieldSet $fieldSet) : void
+    private function countCost(int $queryCost, \Graphpinator\Normalizer\Field\FieldSet $fieldSet) : int
     {
         foreach ($fieldSet as $field) {
             $currentFieldSet = $field->getFields();
 
-            if ($currentFieldSet instanceof \Graphpinator\Normalizer\Field\FieldSet) {
-                ++$queryCost;
-                $this->countCost($queryCost, $currentFieldSet);
+            if ($currentFieldSet === null) {
+                return 0;
             }
 
+            ++$queryCost;
+            $subCost = $this->countCost($queryCost, $currentFieldSet);
             $currentArguments = $field->getArguments();
 
             if ($currentArguments->count() >= 1) {
@@ -68,17 +73,15 @@ final class MaxNodesModule implements \Graphpinator\Module\Module
                         $argumentRawValue = $argument->getValue()->getRawValue();
 
                         if (\is_int($argumentRawValue) && $argumentRawValue > 0) {
-                            $this->actualQueryCost === 0
-                                ? $this->actualQueryCost = $queryCost * $argument->getValue()->getRawValue()
-                                : $this->actualQueryCost *= $argument->getValue()->getRawValue();
-
-                            if ($this->actualQueryCost > $this->maxQueryCost) {
-                                throw new \Graphpinator\QueryCost\Exception\MaximalQueryCostWasReached($this->maxQueryCost);
-                            }
+                            return $subCost === 0
+                                ? $argumentRawValue * $queryCost
+                                : $argumentRawValue * $subCost;
                         }
                     }
                 }
             }
         }
+
+        return $subCost;
     }
 }
