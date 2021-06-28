@@ -16,7 +16,7 @@ final class QueryCostModule implements \Graphpinator\Module\Module
     private array $argumentValues = [];
 
     public function __construct(
-        private int $maxCostDepth,
+        private int $maxQueryCost,
     )
     {
     }
@@ -71,8 +71,8 @@ final class QueryCostModule implements \Graphpinator\Module\Module
                         $queryCost *= $argumentValue;
                     }
 
-                    if ($queryCost > $this->maxCostDepth) {
-                        throw new \Graphpinator\QueryCost\Exception\MaximalQueryCostWasReached($this->maxCostDepth);
+                    if ($queryCost > $this->maxQueryCost) {
+                        throw new \Graphpinator\QueryCost\Exception\MaximalQueryCostWasReached($this->maxQueryCost);
                     }
                 }
 
