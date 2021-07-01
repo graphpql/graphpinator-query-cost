@@ -8,15 +8,9 @@ final class MaxNodesModule implements \Graphpinator\Module\Module
 {
     use \Nette\SmartObject;
 
-    private const ARGUMENT_NAMES = [
-        'limit',
-        'first',
-        'last',
-    ];
-    private int $actualQueryCost = 0;
-
     public function __construct(
         private int $maxQueryCost,
+        private array $limitArgumentNames = ['limit', 'first', 'last'],
     )
     {
     }
@@ -38,7 +32,7 @@ final class MaxNodesModule implements \Graphpinator\Module\Module
 
     public function processFinalized(\Graphpinator\Normalizer\FinalizedRequest $request) : \Graphpinator\Normalizer\FinalizedRequest
     {
-        $queryCost = $this->countCost(1, $request->getOperation()->getFields());
+        $queryCost = $this->countFieldSetCost($request->getOperation()->getFields());
 
         if ($queryCost > $this->maxQueryCost) {
             throw new \Graphpinator\QueryCost\Exception\MaximalQueryCostWasReached($queryCost);
@@ -52,36 +46,40 @@ final class MaxNodesModule implements \Graphpinator\Module\Module
         return $result;
     }
 
-    private function countCost(int $queryCost, \Graphpinator\Normalizer\Field\FieldSet $fieldSet) : int
+    private function countFieldCost(\Graphpinator\Normalizer\Field\Field $field) : int
     {
-        foreach ($fieldSet as $field) {
-            $currentFieldSet = $field->getFields();
+        $currentFields = $field->getFields();
 
-            if ($currentFieldSet === null) {
-                return 0;
-            }
+        if ($currentFields === null) {
+            return 0;
+        }
 
-            ++$queryCost;
-            $subCost = $this->countCost($queryCost, $currentFieldSet);
-            $currentArguments = $field->getArguments();
+        $fieldSetCost = $this->countFieldSetCost($currentFields);
+        $currentArguments = $field->getArguments();
+        $multiplier = 1;
 
-            if ($currentArguments->count() >= 1) {
-                foreach ($currentArguments as $argument) {
-                    $currentArgumentName = $argument->getArgument()->getName();
+        foreach ($currentArguments as $argument) {
 
-                    if (\in_array($currentArgumentName, self::ARGUMENT_NAMES)) {
-                        $argumentRawValue = $argument->getValue()->getRawValue();
+            if (\in_array($argument->getArgument()->getName(), $this->limitArgumentNames) === true) {
+                $argumentRawValue = $argument->getValue()->getRawValue();
 
-                        if (\is_int($argumentRawValue) && $argumentRawValue > 0) {
-                            return $subCost === 0
-                                ? $argumentRawValue * $queryCost
-                                : $argumentRawValue * $subCost;
-                        }
-                    }
+                if (\is_int($argumentRawValue) && $argumentRawValue > 0) {
+                    $multiplier = $argumentRawValue;
                 }
             }
         }
 
-        return $subCost;
+        return ($fieldSetCost + 1) * $multiplier;
+    }
+
+    private function countFieldSetCost(\Graphpinator\Normalizer\Field\FieldSet $fieldSet) : int
+    {
+        $fieldCost = 0;
+
+        foreach ($fieldSet as $field) {
+            $fieldCost += $this->countFieldCost($field);
+        }
+
+        return $fieldCost;
     }
 }
