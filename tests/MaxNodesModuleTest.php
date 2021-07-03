@@ -288,7 +288,7 @@ final class MaxNodesModuleTest extends \PHPUnit\Framework\TestCase
         $graphpinator = new \Graphpinator\Graphpinator(
             $schema,
             false,
-            new \Graphpinator\Module\ModuleSet([new \Graphpinator\QueryCost\MaxNodesModule(10)]),
+            new \Graphpinator\Module\ModuleSet([new \Graphpinator\QueryCost\MaxNodesModule(311)]),
         );
         $graphpinator->run(new \Graphpinator\Request\JsonRequestFactory(\Infinityloop\Utils\Json::fromNative((object) [
             'query' => '{ field { fieldA { fieldA(limit: 10) { fieldB(first: 10) { fieldC { scalar } } } } } }',
