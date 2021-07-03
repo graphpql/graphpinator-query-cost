@@ -51,7 +51,7 @@ final class MaxNodesModule implements \Graphpinator\Module\Module
         $currentFields = $field->getFields();
 
         if ($currentFields === null) {
-            return 0;
+            return 1;
         }
 
         $fieldSetCost = $this->countFieldSetCost($currentFields);
@@ -59,7 +59,6 @@ final class MaxNodesModule implements \Graphpinator\Module\Module
         $multiplier = 1;
 
         foreach ($currentArguments as $argument) {
-
             if (\in_array($argument->getArgument()->getName(), $this->limitArgumentNames) === true) {
                 $argumentRawValue = $argument->getValue()->getRawValue();
 

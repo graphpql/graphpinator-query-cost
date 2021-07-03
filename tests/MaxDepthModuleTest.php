@@ -147,6 +147,101 @@ final class MaxDepthModuleTest extends \PHPUnit\Framework\TestCase
         ])));
     }
 
+    public function testSimpleBreak() : void
+    {
+        $value = new \Graphpinator\Value\ScalarValue(\Graphpinator\Typesystem\Container::String(), 'abc', true);
+        $query = new class extends \Graphpinator\Typesystem\Type {
+            public function validateNonNullValue(mixed $rawValue) : bool
+            {
+                return true;
+            }
+
+            protected function getFieldDefinition() : \Graphpinator\Typesystem\Field\ResolvableFieldSet
+            {
+                return new \Graphpinator\Typesystem\Field\ResolvableFieldSet([
+                    \Graphpinator\Typesystem\Field\ResolvableField::create(
+                        'field',
+                        \Graphpinator\Typesystem\Container::String()->notNull(),
+                        static function ($parent) : string {
+                            return 'test';
+                        },
+                    )->setArguments(new \Graphpinator\Typesystem\Argument\ArgumentSet([
+                        \Graphpinator\Typesystem\Argument\Argument::create(
+                            'arg',
+                            \Graphpinator\Typesystem\Container::String()->notNull(),
+                        ),
+                    ])),
+                ]);
+            }
+        };
+
+        $normalizedRequest = new \Graphpinator\Normalizer\NormalizedRequest(
+            new \Graphpinator\Normalizer\Operation\OperationSet([
+                new \Graphpinator\Normalizer\Operation\Operation(
+                    'query',
+                    null,
+                    $query,
+                    new \Graphpinator\Normalizer\Field\FieldSet([
+                        new \Graphpinator\Normalizer\Field\Field(
+                            $query->getFields()['field'],
+                            'field',
+                            new \Graphpinator\Value\ArgumentValueSet([
+                                new \Graphpinator\Value\ArgumentValue(
+                                    \Graphpinator\Typesystem\Argument\Argument::create(
+                                        'arg',
+                                        \Graphpinator\Typesystem\Container::String()->notNull(),
+                                    ),
+                                    $value,
+                                    false,
+                                ),
+                            ]),
+                            new \Graphpinator\Normalizer\Directive\DirectiveSet(),
+                        ),
+                        new \Graphpinator\Normalizer\Field\Field(
+                            $query->getFields()['field'],
+                            'fieldWithChild',
+                            new \Graphpinator\Value\ArgumentValueSet([
+                                new \Graphpinator\Value\ArgumentValue(
+                                    \Graphpinator\Typesystem\Argument\Argument::create(
+                                        'arg',
+                                        \Graphpinator\Typesystem\Container::String()->notNull(),
+                                    ),
+                                    $value,
+                                    false,
+                                ),
+                            ]),
+                            new \Graphpinator\Normalizer\Directive\DirectiveSet(),
+                            new \Graphpinator\Normalizer\Field\FieldSet([
+                                new \Graphpinator\Normalizer\Field\Field(
+                                    $query->getFields()['field'],
+                                    'field',
+                                    new \Graphpinator\Value\ArgumentValueSet([
+                                        new \Graphpinator\Value\ArgumentValue(
+                                            \Graphpinator\Typesystem\Argument\Argument::create(
+                                                'arg',
+                                                \Graphpinator\Typesystem\Container::String()->notNull(),
+                                            ),
+                                            $value,
+                                            false,
+                                        ),
+                                    ]),
+                                    new \Graphpinator\Normalizer\Directive\DirectiveSet(),
+                                ),
+                            ]),
+                        ),
+                    ]),
+                    new \Graphpinator\Normalizer\Variable\VariableSet(),
+                    new \Graphpinator\Normalizer\Directive\DirectiveSet(),
+                ),
+            ]),
+        );
+
+        $this->expectException(\Graphpinator\QueryCost\Exception\MaximalDepthWasReached::class);
+
+        $maxDepth = new \Graphpinator\QueryCost\MaxDepthModule(0);
+        $maxDepth->processNormalized($normalizedRequest);
+    }
+
     public function testException() : void
     {
         $exception = new \Graphpinator\QueryCost\Exception\MaximalDepthWasReached(5);

@@ -4,9 +4,69 @@ declare(strict_types = 1);
 
 namespace Graphpinator\QueryCost\Tests;
 
+use \Infinityloop\Utils\Json;
+
 final class MaxNodesModuleTest extends \PHPUnit\Framework\TestCase
 {
-    public function testSimple() : void
+    public static function getEmptyTestType() : \Graphpinator\Type\Type
+    {
+        return new class extends \Graphpinator\Type\Type {
+            public function validateNonNullValue(mixed $rawValue) : bool
+            {
+                return true;
+            }
+
+            protected function getFieldDefinition() : \Graphpinator\Typesystem\Field\ResolvableFieldSet
+            {
+                return new \Graphpinator\Typesystem\Field\ResolvableFieldSet([
+                    \Graphpinator\Typesystem\Field\ResolvableField::create(
+                        'name',
+                        \Graphpinator\Container\Container::String(),
+                        static function () : string {
+                            return 'testName';
+                        },
+                    ),
+                ]);
+            }
+        };
+    }
+
+    public function simpleDataProvider() : array
+    {
+        return [
+            [
+                \Infinityloop\Utils\Json::fromNative((object) [
+                    'query' => '{ field { fieldA { fieldA(limit: 10) { fieldB(first: 5) { fieldC(last: 2) { scalar(arg: 5) } } } } } }',
+                    ]),
+                \Infinityloop\Utils\Json::fromNative(
+                    (object) ['data' => ['field' => ['fieldA' => ['fieldA' => ['fieldB' => ['fieldC' => ['scalar' => 1]]]]]]],
+                ),
+            ],
+            [
+                \Infinityloop\Utils\Json::fromNative((object) [
+                    'query' => '{ field { stringField(limit: "testVal") {fieldA(limit: 0) { scalar } } } }',
+                ]),
+                \Infinityloop\Utils\Json::fromNative(
+                    (object) ['data' => ['field' => ['stringField' => ['fieldA' => ['scalar' => 1]]]]],
+                ),
+            ],
+            [
+                \Infinityloop\Utils\Json::fromNative((object) [
+                    'query' => '{ field { fieldA(limit: -1) { stringField(limit: "test") { scalar emptyField { name } } } } }',
+                ]),
+                \Infinityloop\Utils\Json::fromNative(
+                    (object) ['data' => ['field' => ['fieldA' => ['stringField' => ['scalar' => 1, 'emptyField' => null]]]]],
+                ),
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider simpleDataProvider
+     * @param \Infinityloop\Utils\Json $request
+     * @param \Infinityloop\Utils\Json $expected
+     */
+    public function testSimple(Json $request, Json $expected) : void
     {
         $type = new class extends \Graphpinator\Typesystem\Type {
             public function validateNonNullValue(mixed $rawValue) : bool
@@ -30,6 +90,18 @@ final class MaxNodesModuleTest extends \PHPUnit\Framework\TestCase
                         ),
                     ])),
                     \Graphpinator\Typesystem\Field\ResolvableField::create(
+                        'stringField',
+                        $this,
+                        static function ($parent, $limit) : string {
+                            return 'stringValue';
+                        },
+                    )->setArguments(new \Graphpinator\Typesystem\Argument\ArgumentSet([
+                        \Graphpinator\Argument\Argument::create(
+                            'limit',
+                            \Graphpinator\Container\Container::String(),
+                        ),
+                    ])),
+                    \Graphpinator\Typesystem\Field\ResolvableField::create(
                         'fieldB',
                         $this,
                         static function ($parent, $first) : int {
@@ -45,7 +117,7 @@ final class MaxNodesModuleTest extends \PHPUnit\Framework\TestCase
                         'fieldC',
                         $this,
                         static function ($parent, $last) : int {
-                            return 1;
+                            return $last;
                         },
                     )->setArguments(new \Graphpinator\Typesystem\Argument\ArgumentSet([
                         \Graphpinator\Argument\Argument::create(
@@ -70,6 +142,12 @@ final class MaxNodesModuleTest extends \PHPUnit\Framework\TestCase
                         \Graphpinator\Container\Container::Int()->notNull(),
                         static function ($parent) : int {
                             return 1;
+                        },
+                    ),
+                    \Graphpinator\Typesystem\Field\ResolvableField::create(
+                        'emptyField',
+                        MaxNodesModuleTest::getEmptyTestType(),
+                        static function ($parent) : void {
                         },
                     ),
                 ]);
@@ -107,18 +185,11 @@ final class MaxNodesModuleTest extends \PHPUnit\Framework\TestCase
         $graphpinator = new \Graphpinator\Graphpinator(
             $schema,
             false,
-            new \Graphpinator\Module\ModuleSet([new \Graphpinator\QueryCost\MaxNodesModule(162)]),
+            new \Graphpinator\Module\ModuleSet([new \Graphpinator\QueryCost\MaxNodesModule(262, ['limit', 'last', 'first'])]),
         );
-        $result = $graphpinator->run(new \Graphpinator\Request\JsonRequestFactory(\Infinityloop\Utils\Json::fromNative((object) [
-            'query' => '{ field { fieldA { fieldA(limit: 10) { fieldB(first: 5) { fieldC(last: 2) { scalar(arg: 5) } } } } } }',
-        ])));
+        $result = $graphpinator->run(new \Graphpinator\Request\JsonRequestFactory($request));
 
-        self::assertSame(
-            \Infinityloop\Utils\Json::fromNative(
-                (object) ['data' => ['field' => ['fieldA' => ['fieldA' => ['fieldB' => ['fieldC' => ['scalar' => 1]]]]]]],
-            )->toString(),
-            $result->toString(),
-        );
+        self::assertSame($expected->toString(), $result->toString());
     }
 
     public function testInvalid() : void
