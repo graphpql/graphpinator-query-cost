@@ -64,6 +64,8 @@ final class MaxNodesModule implements \Graphpinator\Module\Module
 
                 if (\is_int($argumentRawValue) && $argumentRawValue > 0) {
                     $multiplier = $argumentRawValue;
+                    
+                    break;
                 }
             }
         }
