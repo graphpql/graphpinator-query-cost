@@ -59,7 +59,7 @@ final class MaxNodesModule implements \Graphpinator\Module\Module
         $multiplier = 1;
 
         foreach ($currentArguments as $argument) {
-            if (\in_array($argument->getArgument()->getName(), $this->limitArgumentNames) === true) {
+            if (\in_array($argument->getArgument()->getName(), $this->limitArgumentNames, true)) {
                 $argumentRawValue = $argument->getValue()->getRawValue();
 
                 if (\is_int($argumentRawValue) && $argumentRawValue > 0) {
