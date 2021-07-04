@@ -4,37 +4,16 @@ declare(strict_types = 1);
 
 namespace Graphpinator\QueryCost\Tests;
 
+use \Infinityloop\Utils\Json;
+
 final class MaxDepthModuleTest extends \PHPUnit\Framework\TestCase
 {
-    public function testSimple() : void
+    /**
+     * @return \Graphpinator\Typesystem\Type|\Graphpinator\QueryCost\Tests\__anonymous @260
+     */
+    public static function getQuery($type) : \Graphpinator\Typesystem\Type|__anonymous
     {
-        $type = new class extends \Graphpinator\Typesystem\Type {
-            public function validateNonNullValue(mixed $rawValue) : bool
-            {
-                return true;
-            }
-
-            protected function getFieldDefinition() : \Graphpinator\Typesystem\Field\ResolvableFieldSet
-            {
-                return new \Graphpinator\Typesystem\Field\ResolvableFieldSet([
-                    \Graphpinator\Typesystem\Field\ResolvableField::create(
-                        'field',
-                        $this,
-                        static function ($parent) : int {
-                            return 1;
-                        },
-                    ),
-                    \Graphpinator\Typesystem\Field\ResolvableField::create(
-                        'scalar',
-                        \Graphpinator\Container\Container::Int()->notNull(),
-                        static function ($parent) : int {
-                            return 1;
-                        },
-                    ),
-                ]);
-            }
-        };
-        $query = new class ($type) extends \Graphpinator\Typesystem\Type {
+        return new class ($type) extends \Graphpinator\Typesystem\Type {
             public function __construct(
                 private \Graphpinator\Typesystem\Type $type,
             )
@@ -60,85 +39,134 @@ final class MaxDepthModuleTest extends \PHPUnit\Framework\TestCase
                 ]);
             }
         };
-        $container = new \Graphpinator\SimpleContainer([$query], []);
-        $schema = new \Graphpinator\Typesystem\Schema($container, $query);
+    }
 
+    /**
+     * @return \Graphpinator\Typesystem\Type|\Graphpinator\QueryCost\Tests\__anonymous @1247
+     */
+    public static function getTestType() : \Graphpinator\Typesystem\Type|__anonymous
+    {
+        return new class extends \Graphpinator\Typesystem\Type {
+            public function validateNonNullValue(mixed $rawValue) : bool
+            {
+                return true;
+            }
+
+            protected function getFieldDefinition() : \Graphpinator\Typesystem\Field\ResolvableFieldSet
+            {
+                return new \Graphpinator\Typesystem\Field\ResolvableFieldSet([
+                    \Graphpinator\Typesystem\Field\ResolvableField::create(
+                        'field',
+                        $this,
+                        static function ($parent) : int {
+                            return 1;
+                        },
+                    ),
+                    \Graphpinator\Typesystem\Field\ResolvableField::create(
+                        'scalar',
+                        \Graphpinator\Container\Container::Int()->notNull(),
+                        static function ($parent) : int {
+                            return 1;
+                        },
+                    ),
+                    \Graphpinator\Typesystem\Field\ResolvableField::create(
+                        'simpleField',
+                        MaxDepthModuleTest::getSimpleType(),
+                        static function ($parent) : int {
+                            return 1;
+                        },
+                    ),
+                ]);
+            }
+        };
+    }
+
+    /**
+     * @return \Graphpinator\Typesystem\Type|\Graphpinator\QueryCost\Tests\__anonymous @2760
+     */
+    public static function getSimpleType() : \Graphpinator\Typesystem\Type|__anonymous
+    {
+        return new class extends \Graphpinator\Typesystem\Type {
+            public function validateNonNullValue(mixed $rawValue) : bool
+            {
+                return true;
+            }
+
+            protected function getFieldDefinition() : \Graphpinator\Typesystem\Field\ResolvableFieldSet
+            {
+                return new \Graphpinator\Typesystem\Field\ResolvableFieldSet([
+                    \Graphpinator\Typesystem\Field\ResolvableField::create(
+                        'field',
+                        \Graphpinator\Container\Container::String()->notNull(),
+                        static function ($parent) : string {
+                            return 'testValue';
+                        },
+                    ),
+                    \Graphpinator\Typesystem\Field\ResolvableField::create(
+                        'scalar',
+                        \Graphpinator\Container\Container::Int()->notNull(),
+                        static function ($parent) : int {
+                            return 1;
+                        },
+                    ),
+                ]);
+            }
+        };
+    }
+
+    public function simpleDataProvider() : array
+    {
+        return [
+            [
+                \Infinityloop\Utils\Json::fromNative((object) [
+                    'query' => '{ field { field { field { scalar simpleField { scalar field } } } } }',
+                ]),
+                \Infinityloop\Utils\Json::fromNative(
+                    (object) [
+                        'data' => [
+                            'field' => [
+                                'field' => [
+                                    'field' => [
+                                        'scalar' => 1,
+                                        'simpleField' => ['scalar' => 1, 'field' => 'testValue'],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ),
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider simpleDataProvider
+     * @param \Infinityloop\Utils\Json $request
+     * @param \Infinityloop\Utils\Json $expected
+     */
+    public function testSimple(Json $request, Json $expected) : void
+    {
         $graphpinator = new \Graphpinator\Graphpinator(
-            $schema,
+            $this->getSchema(),
             false,
-            new \Graphpinator\Module\ModuleSet([new \Graphpinator\QueryCost\MaxDepthModule(3)]),
+            new \Graphpinator\Module\ModuleSet([new \Graphpinator\QueryCost\MaxDepthModule(4)]),
         );
-        $result = $graphpinator->run(new \Graphpinator\Request\JsonRequestFactory(\Infinityloop\Utils\Json::fromNative((object) [
-            'query' => '{ field { field { field { scalar } } } }',
-        ])));
+        $result = $graphpinator->run(new \Graphpinator\Request\JsonRequestFactory($request));
 
-        self::assertSame(
-            \Infinityloop\Utils\Json::fromNative((object) ['data' => ['field' => ['field' => ['field' => ['scalar' => 1]]]]])->toString(),
-            $result->toString(),
-        );
+        self::assertSame($expected->toString(), $result->toString());
     }
 
     public function testInvalid() : void
     {
+        $exception = new \Graphpinator\QueryCost\Exception\MaximalDepthWasReached(5);
+
+        self::assertSame('Maximal fields depth 5 was reached.', $exception->getMessage());
+        self::assertTrue($exception->isOutputable());
+
         $this->expectException(\Graphpinator\QueryCost\Exception\MaximalDepthWasReached::class);
 
-        $type = new class extends \Graphpinator\Typesystem\Type {
-            public function validateNonNullValue(mixed $rawValue) : bool
-            {
-                return true;
-            }
-
-            protected function getFieldDefinition() : \Graphpinator\Typesystem\Field\ResolvableFieldSet
-            {
-                return new \Graphpinator\Typesystem\Field\ResolvableFieldSet([
-                    \Graphpinator\Typesystem\Field\ResolvableField::create(
-                        'field',
-                        $this,
-                        static function ($parent) : int {
-                            return 1;
-                        },
-                    ),
-                    \Graphpinator\Typesystem\Field\ResolvableField::create(
-                        'scalar',
-                        \Graphpinator\Container\Container::Int()->notNull(),
-                        static function ($parent) : int {
-                            return 1;
-                        },
-                    ),
-                ]);
-            }
-        };
-        $query = new class ($type) extends \Graphpinator\Typesystem\Type {
-            public function __construct(
-                private \Graphpinator\Typesystem\Type $type,
-            )
-            {
-                parent::__construct();
-            }
-
-            public function validateNonNullValue(mixed $rawValue) : bool
-            {
-                return true;
-            }
-
-            protected function getFieldDefinition() : \Graphpinator\Typesystem\Field\ResolvableFieldSet
-            {
-                return new \Graphpinator\Typesystem\Field\ResolvableFieldSet([
-                    \Graphpinator\Typesystem\Field\ResolvableField::create(
-                        'field',
-                        $this->type->notNull(),
-                        static function ($parent) : int {
-                            return 1;
-                        },
-                    ),
-                ]);
-            }
-        };
-        $container = new \Graphpinator\SimpleContainer([$query], []);
-        $schema = new \Graphpinator\Typesystem\Schema($container, $query);
-
         $graphpinator = new \Graphpinator\Graphpinator(
-            $schema,
+            $this->getSchema(),
             false,
             new \Graphpinator\Module\ModuleSet([new \Graphpinator\QueryCost\MaxDepthModule(2)]),
         );
@@ -147,106 +175,13 @@ final class MaxDepthModuleTest extends \PHPUnit\Framework\TestCase
         ])));
     }
 
-    public function testSimpleBreak() : void
+    private function getContainer() : \Graphpinator\SimpleContainer
     {
-        $value = new \Graphpinator\Value\ScalarValue(\Graphpinator\Typesystem\Container::String(), 'abc', true);
-        $query = new class extends \Graphpinator\Typesystem\Type {
-            public function validateNonNullValue(mixed $rawValue) : bool
-            {
-                return true;
-            }
-
-            protected function getFieldDefinition() : \Graphpinator\Typesystem\Field\ResolvableFieldSet
-            {
-                return new \Graphpinator\Typesystem\Field\ResolvableFieldSet([
-                    \Graphpinator\Typesystem\Field\ResolvableField::create(
-                        'field',
-                        \Graphpinator\Typesystem\Container::String()->notNull(),
-                        static function ($parent) : string {
-                            return 'test';
-                        },
-                    )->setArguments(new \Graphpinator\Typesystem\Argument\ArgumentSet([
-                        \Graphpinator\Typesystem\Argument\Argument::create(
-                            'arg',
-                            \Graphpinator\Typesystem\Container::String()->notNull(),
-                        ),
-                    ])),
-                ]);
-            }
-        };
-
-        $normalizedRequest = new \Graphpinator\Normalizer\NormalizedRequest(
-            new \Graphpinator\Normalizer\Operation\OperationSet([
-                new \Graphpinator\Normalizer\Operation\Operation(
-                    'query',
-                    null,
-                    $query,
-                    new \Graphpinator\Normalizer\Field\FieldSet([
-                        new \Graphpinator\Normalizer\Field\Field(
-                            $query->getFields()['field'],
-                            'field',
-                            new \Graphpinator\Value\ArgumentValueSet([
-                                new \Graphpinator\Value\ArgumentValue(
-                                    \Graphpinator\Typesystem\Argument\Argument::create(
-                                        'arg',
-                                        \Graphpinator\Typesystem\Container::String()->notNull(),
-                                    ),
-                                    $value,
-                                    false,
-                                ),
-                            ]),
-                            new \Graphpinator\Normalizer\Directive\DirectiveSet(),
-                        ),
-                        new \Graphpinator\Normalizer\Field\Field(
-                            $query->getFields()['field'],
-                            'fieldWithChild',
-                            new \Graphpinator\Value\ArgumentValueSet([
-                                new \Graphpinator\Value\ArgumentValue(
-                                    \Graphpinator\Typesystem\Argument\Argument::create(
-                                        'arg',
-                                        \Graphpinator\Typesystem\Container::String()->notNull(),
-                                    ),
-                                    $value,
-                                    false,
-                                ),
-                            ]),
-                            new \Graphpinator\Normalizer\Directive\DirectiveSet(),
-                            new \Graphpinator\Normalizer\Field\FieldSet([
-                                new \Graphpinator\Normalizer\Field\Field(
-                                    $query->getFields()['field'],
-                                    'field',
-                                    new \Graphpinator\Value\ArgumentValueSet([
-                                        new \Graphpinator\Value\ArgumentValue(
-                                            \Graphpinator\Typesystem\Argument\Argument::create(
-                                                'arg',
-                                                \Graphpinator\Typesystem\Container::String()->notNull(),
-                                            ),
-                                            $value,
-                                            false,
-                                        ),
-                                    ]),
-                                    new \Graphpinator\Normalizer\Directive\DirectiveSet(),
-                                ),
-                            ]),
-                        ),
-                    ]),
-                    new \Graphpinator\Normalizer\Variable\VariableSet(),
-                    new \Graphpinator\Normalizer\Directive\DirectiveSet(),
-                ),
-            ]),
-        );
-
-        $this->expectException(\Graphpinator\QueryCost\Exception\MaximalDepthWasReached::class);
-
-        $maxDepth = new \Graphpinator\QueryCost\MaxDepthModule(0);
-        $maxDepth->processNormalized($normalizedRequest);
+        return new \Graphpinator\SimpleContainer([self::getQuery(self::getTestType())], []);
     }
 
-    public function testException() : void
+    private function getSchema() : \Graphpinator\Typesystem\Schema
     {
-        $exception = new \Graphpinator\QueryCost\Exception\MaximalDepthWasReached(5);
-
-        self::assertTrue($exception->isOutputable());
-        self::assertSame('Maximal fields depth 5 was reached.', $exception->getMessage());
+        return new \Graphpinator\Typesystem\Schema(self::getContainer(), self::getQuery(self::getTestType()));
     }
 }
