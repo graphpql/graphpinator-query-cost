@@ -8,10 +8,7 @@ use \Infinityloop\Utils\Json;
 
 final class MaxNodesModuleTest extends \PHPUnit\Framework\TestCase
 {
-    /**
-     * @return \Graphpinator\Typesystem\Type|\Graphpinator\QueryCost\Tests\__anonymous @260
-     */
-    public static function getQuery($type) : \Graphpinator\Typesystem\Type|__anonymous
+    public static function getQuery($type) : \Graphpinator\Typesystem\Type
     {
         return new class ($type) extends \Graphpinator\Typesystem\Type {
             public function __construct(
@@ -40,11 +37,8 @@ final class MaxNodesModuleTest extends \PHPUnit\Framework\TestCase
             }
         };
     }
-
-    /**
-     * @return \Graphpinator\Typesystem\Type|\Graphpinator\QueryCost\Tests\__anonymous @1324
-     */
-    public static function getTestType() : \Graphpinator\Typesystem\Type|__anonymous
+    
+    public static function getTestType() : \Graphpinator\Typesystem\Type
     {
         return new class extends \Graphpinator\Typesystem\Type {
             public function validateNonNullValue(mixed $rawValue) : bool

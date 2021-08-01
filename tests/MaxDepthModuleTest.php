@@ -8,10 +8,7 @@ use \Infinityloop\Utils\Json;
 
 final class MaxDepthModuleTest extends \PHPUnit\Framework\TestCase
 {
-    /**
-     * @return \Graphpinator\Typesystem\Type|\Graphpinator\QueryCost\Tests\__anonymous @260
-     */
-    public static function getQuery($type) : \Graphpinator\Typesystem\Type|__anonymous
+    public static function getQuery($type) : \Graphpinator\Typesystem\Type
     {
         return new class ($type) extends \Graphpinator\Typesystem\Type {
             public function __construct(
@@ -41,10 +38,7 @@ final class MaxDepthModuleTest extends \PHPUnit\Framework\TestCase
         };
     }
 
-    /**
-     * @return \Graphpinator\Typesystem\Type|\Graphpinator\QueryCost\Tests\__anonymous @1247
-     */
-    public static function getTestType() : \Graphpinator\Typesystem\Type|__anonymous
+    public static function getTestType() : \Graphpinator\Typesystem\Type
     {
         return new class extends \Graphpinator\Typesystem\Type {
             public function validateNonNullValue(mixed $rawValue) : bool
@@ -81,10 +75,7 @@ final class MaxDepthModuleTest extends \PHPUnit\Framework\TestCase
         };
     }
 
-    /**
-     * @return \Graphpinator\Typesystem\Type|\Graphpinator\QueryCost\Tests\__anonymous @2760
-     */
-    public static function getSimpleType() : \Graphpinator\Typesystem\Type|__anonymous
+    public static function getSimpleType() : \Graphpinator\Typesystem\Type
     {
         return new class extends \Graphpinator\Typesystem\Type {
             public function validateNonNullValue(mixed $rawValue) : bool
@@ -149,7 +140,7 @@ final class MaxDepthModuleTest extends \PHPUnit\Framework\TestCase
         $graphpinator = new \Graphpinator\Graphpinator(
             $this->getSchema(),
             false,
-            new \Graphpinator\Module\ModuleSet([new \Graphpinator\QueryCost\MaxDepthModule(4)]),
+            new \Graphpinator\Module\ModuleSet([new \Graphpinator\QueryCost\MaxDepthModule(5)]),
         );
         $result = $graphpinator->run(new \Graphpinator\Request\JsonRequestFactory($request));
 
