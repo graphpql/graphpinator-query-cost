@@ -58,7 +58,7 @@ final class MaxDepthModule implements \Graphpinator\Module\Module
                 continue;
             }
 
-            $this->countDepth($fieldDepth, $currentFieldSet);
+            $this->validateDepth($fieldDepth, $currentFieldSet);
         }
     }
 }
