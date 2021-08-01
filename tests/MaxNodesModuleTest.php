@@ -37,7 +37,7 @@ final class MaxNodesModuleTest extends \PHPUnit\Framework\TestCase
             }
         };
     }
-    
+
     public static function getTestType() : \Graphpinator\Typesystem\Type
     {
         return new class extends \Graphpinator\Typesystem\Type {
