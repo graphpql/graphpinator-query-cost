@@ -27,7 +27,7 @@ final class MaxDepthModule implements \Graphpinator\Module\Module
     public function processNormalized(\Graphpinator\Normalizer\NormalizedRequest $request) : \Graphpinator\Normalizer\NormalizedRequest
     {
         foreach ($request->getOperations() as $operation) {
-            $this->countDepth(1, $operation->getFields());
+            $this->validateDepth(1, $operation->getFields());
         }
 
         return $request;
@@ -43,8 +43,14 @@ final class MaxDepthModule implements \Graphpinator\Module\Module
         return $result;
     }
 
-    private function countDepth(int $fieldDepth, \Graphpinator\Normalizer\Field\FieldSet $fieldSet) : void
+    private function validateDepth(int $fieldDepth, \Graphpinator\Normalizer\Field\FieldSet $fieldSet) : void
     {
+        if ($fieldDepth > $this->maxDepth) {
+            throw new \Graphpinator\QueryCost\Exception\MaximalDepthWasReached($this->maxDepth);
+        }
+        
+        ++$fieldDepth;
+        
         foreach ($fieldSet as $field) {
             $currentFieldSet = $field->getFields();
 
@@ -52,11 +58,6 @@ final class MaxDepthModule implements \Graphpinator\Module\Module
                 continue;
             }
 
-            if ($fieldDepth > $this->maxDepth) {
-                throw new \Graphpinator\QueryCost\Exception\MaximalDepthWasReached($this->maxDepth);
-            }
-
-            ++$fieldDepth;
             $this->countDepth($fieldDepth, $currentFieldSet);
         }
     }
