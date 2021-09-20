@@ -58,7 +58,8 @@ final class MaxDepthModule implements \Graphpinator\Module\Module
                         continue 2;
                     }
 
-                    $this->validateDepth(++$fieldDepth, $currentFieldSet);
+                    $nextDepth = $fieldDepth + 1;
+                    $this->validateDepth($nextDepth, $currentFieldSet);
 
                     break;
                 case \Graphpinator\Normalizer\Selection\FragmentSpread::class:
