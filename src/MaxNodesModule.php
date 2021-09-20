@@ -32,7 +32,7 @@ final class MaxNodesModule implements \Graphpinator\Module\Module
 
     public function processFinalized(\Graphpinator\Normalizer\FinalizedRequest $request) : \Graphpinator\Normalizer\FinalizedRequest
     {
-        $queryCost = $this->countFieldSetCost($request->getOperation()->getFields());
+        $queryCost = $this->countSelectionSetCost($request->getOperation()->getSelections());
 
         if ($queryCost > $this->maxQueryCost) {
             throw new \Graphpinator\QueryCost\Exception\MaximalQueryCostWasReached($queryCost);
@@ -46,15 +46,15 @@ final class MaxNodesModule implements \Graphpinator\Module\Module
         return $result;
     }
 
-    private function countFieldCost(\Graphpinator\Normalizer\Field\Field $field) : int
+    private function countFieldCost(\Graphpinator\Normalizer\Selection\Field $field) : int
     {
-        $currentFields = $field->getFields();
+        $currentFields = $field->getSelections();
 
         if ($currentFields === null) {
             return 1;
         }
 
-        $fieldSetCost = $this->countFieldSetCost($currentFields);
+        $fieldSetCost = $this->countSelectionSetCost($currentFields);
         $currentArguments = $field->getArguments();
         $multiplier = 1;
 
@@ -73,14 +73,28 @@ final class MaxNodesModule implements \Graphpinator\Module\Module
         return ($fieldSetCost + 1) * $multiplier;
     }
 
-    private function countFieldSetCost(\Graphpinator\Normalizer\Field\FieldSet $fieldSet) : int
+    private function countFragmentSpreadCost(\Graphpinator\Normalizer\Selection\FragmentSpread $fragmentSpread) : int
     {
-        $fieldCost = 0;
+        return $this->countSelectionSetCost($fragmentSpread->getSelections());
+    }
 
-        foreach ($fieldSet as $field) {
-            $fieldCost += $this->countFieldCost($field);
+    private function countInlineFragmentCost(\Graphpinator\Normalizer\Selection\InlineFragment $inlineFragment) : int
+    {
+        return $this->countSelectionSetCost($inlineFragment->getSelections());
+    }
+
+    private function countSelectionSetCost(\Graphpinator\Normalizer\Selection\SelectionSet $selectionSet) : int
+    {
+        $cost = 0;
+
+        foreach ($selectionSet as $selection) {
+            $cost += match ($selection::class) {
+                \Graphpinator\Normalizer\Selection\Field::class => $this->countFieldCost($selection),
+                \Graphpinator\Normalizer\Selection\FragmentSpread::class => $this->countFragmentSpreadCost($selection),
+                \Graphpinator\Normalizer\Selection\InlineFragment::class => $this->countInlineFragmentCost($selection),
+            };
         }
 
-        return $fieldCost;
+        return $cost;
     }
 }

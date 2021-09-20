@@ -27,7 +27,7 @@ final class MaxDepthModule implements \Graphpinator\Module\Module
     public function processNormalized(\Graphpinator\Normalizer\NormalizedRequest $request) : \Graphpinator\Normalizer\NormalizedRequest
     {
         foreach ($request->getOperations() as $operation) {
-            $this->validateDepth(1, $operation->getFields());
+            $this->validateDepth(1, $operation->getSelections());
         }
 
         return $request;
@@ -43,22 +43,31 @@ final class MaxDepthModule implements \Graphpinator\Module\Module
         return $result;
     }
 
-    private function validateDepth(int $fieldDepth, \Graphpinator\Normalizer\Field\FieldSet $fieldSet) : void
+    private function validateDepth(int $fieldDepth, \Graphpinator\Normalizer\Selection\SelectionSet $selectionSet) : void
     {
         if ($fieldDepth > $this->maxDepth) {
             throw new \Graphpinator\QueryCost\Exception\MaximalDepthWasReached($this->maxDepth);
         }
 
-        ++$fieldDepth;
+        foreach ($selectionSet as $selection) {
+            switch ($selection::class) {
+                case \Graphpinator\Normalizer\Selection\Field::class:
+                    $currentFieldSet = $selection->getSelections();
 
-        foreach ($fieldSet as $field) {
-            $currentFieldSet = $field->getFields();
+                    if ($currentFieldSet === null) {
+                        continue 2;
+                    }
 
-            if ($currentFieldSet === null) {
-                continue;
+                    $this->validateDepth(++$fieldDepth, $currentFieldSet);
+
+                    break;
+                case \Graphpinator\Normalizer\Selection\FragmentSpread::class:
+                    // fallthrough
+                case \Graphpinator\Normalizer\Selection\InlineFragment::class:
+                    $this->validateDepth($fieldDepth, $selection->getSelections());
+
+                    break;
             }
-
-            $this->validateDepth($fieldDepth, $currentFieldSet);
         }
     }
 }
