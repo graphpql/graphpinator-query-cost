@@ -56,9 +56,9 @@ final class MaxNodesModuleTest extends \PHPUnit\Framework\TestCase
                             return 1;
                         },
                     )->setArguments(new \Graphpinator\Typesystem\Argument\ArgumentSet([
-                        \Graphpinator\Argument\Argument::create(
+                        \Graphpinator\Typesystem\Argument\Argument::create(
                             'limit',
-                            \Graphpinator\Container\Container::Int(),
+                            \Graphpinator\Typesystem\Container::Int(),
                         ),
                     ])),
                     \Graphpinator\Typesystem\Field\ResolvableField::create(
@@ -68,9 +68,9 @@ final class MaxNodesModuleTest extends \PHPUnit\Framework\TestCase
                             return 'stringValue';
                         },
                     )->setArguments(new \Graphpinator\Typesystem\Argument\ArgumentSet([
-                        \Graphpinator\Argument\Argument::create(
+                        \Graphpinator\Typesystem\Argument\Argument::create(
                             'limit',
-                            \Graphpinator\Container\Container::String(),
+                            \Graphpinator\Typesystem\Container::String(),
                         ),
                     ])),
                     \Graphpinator\Typesystem\Field\ResolvableField::create(
@@ -80,9 +80,9 @@ final class MaxNodesModuleTest extends \PHPUnit\Framework\TestCase
                             return 1;
                         },
                     )->setArguments(new \Graphpinator\Typesystem\Argument\ArgumentSet([
-                        \Graphpinator\Argument\Argument::create(
+                        \Graphpinator\Typesystem\Argument\Argument::create(
                             'first',
-                            \Graphpinator\Container\Container::Int(),
+                            \Graphpinator\Typesystem\Container::Int(),
                         ),
                     ])),
                     \Graphpinator\Typesystem\Field\ResolvableField::create(
@@ -92,26 +92,26 @@ final class MaxNodesModuleTest extends \PHPUnit\Framework\TestCase
                             return $last;
                         },
                     )->setArguments(new \Graphpinator\Typesystem\Argument\ArgumentSet([
-                        \Graphpinator\Argument\Argument::create(
+                        \Graphpinator\Typesystem\Argument\Argument::create(
                             'last',
-                            \Graphpinator\Container\Container::Int(),
+                            \Graphpinator\Typesystem\Container::Int(),
                         ),
                     ])),
                     \Graphpinator\Typesystem\Field\ResolvableField::create(
                         'scalar',
-                        \Graphpinator\Container\Container::Int()->notNull(),
+                        \Graphpinator\Typesystem\Container::Int()->notNull(),
                         static function ($parent, $arg) : int {
                             return 1;
                         },
                     )->setArguments(new \Graphpinator\Typesystem\Argument\ArgumentSet([
-                        \Graphpinator\Argument\Argument::create(
+                        \Graphpinator\Typesystem\Argument\Argument::create(
                             'arg',
-                            \Graphpinator\Container\Container::Int(),
+                            \Graphpinator\Typesystem\Container::Int(),
                         ),
                     ])),
                     \Graphpinator\Typesystem\Field\ResolvableField::create(
                         'fieldNoArgs',
-                        \Graphpinator\Container\Container::Int()->notNull(),
+                        \Graphpinator\Typesystem\Container::Int()->notNull(),
                         static function ($parent) : int {
                             return 1;
                         },
@@ -128,17 +128,17 @@ final class MaxNodesModuleTest extends \PHPUnit\Framework\TestCase
                         static function ($parent, $limit, $last, $first) : void {
                         },
                     )->setArguments(new \Graphpinator\Typesystem\Argument\ArgumentSet([
-                        \Graphpinator\Argument\Argument::create(
+                        \Graphpinator\Typesystem\Argument\Argument::create(
                             'limit',
-                            \Graphpinator\Container\Container::Int(),
+                            \Graphpinator\Typesystem\Container::Int(),
                         ),
-                        \Graphpinator\Argument\Argument::create(
+                        \Graphpinator\Typesystem\Argument\Argument::create(
                             'last',
-                            \Graphpinator\Container\Container::Int(),
+                            \Graphpinator\Typesystem\Container::Int(),
                         ),
-                        \Graphpinator\Argument\Argument::create(
+                        \Graphpinator\Typesystem\Argument\Argument::create(
                             'first',
-                            \Graphpinator\Container\Container::Int(),
+                            \Graphpinator\Typesystem\Container::Int(),
                         ),
                     ])),
                     \Graphpinator\Typesystem\Field\ResolvableField::create(
@@ -147,9 +147,9 @@ final class MaxNodesModuleTest extends \PHPUnit\Framework\TestCase
                         static function ($parent, $limit) : void {
                         },
                     )->setArguments(new \Graphpinator\Typesystem\Argument\ArgumentSet([
-                        \Graphpinator\Argument\Argument::create(
+                        \Graphpinator\Typesystem\Argument\Argument::create(
                             'limit',
-                            \Graphpinator\Container\Container::Int(),
+                            \Graphpinator\Typesystem\Container::Int(),
                         )->setDefaultValue(0),
                     ])),
                 ]);
@@ -157,9 +157,9 @@ final class MaxNodesModuleTest extends \PHPUnit\Framework\TestCase
         };
     }
 
-    public static function getOneFieldType() : \Graphpinator\Type\Type
+    public static function getOneFieldType() : \Graphpinator\Typesystem\Type
     {
-        return new class extends \Graphpinator\Type\Type {
+        return new class extends \Graphpinator\Typesystem\Type {
             public function validateNonNullValue(mixed $rawValue) : bool
             {
                 return true;
@@ -170,7 +170,7 @@ final class MaxNodesModuleTest extends \PHPUnit\Framework\TestCase
                 return new \Graphpinator\Typesystem\Field\ResolvableFieldSet([
                     \Graphpinator\Typesystem\Field\ResolvableField::create(
                         'name',
-                        \Graphpinator\Container\Container::String(),
+                        \Graphpinator\Typesystem\Container::String(),
                         static function () : string {
                             return 'testName';
                         },
@@ -234,7 +234,7 @@ final class MaxNodesModuleTest extends \PHPUnit\Framework\TestCase
     public function testSimple(Json $request, Json $expected) : void
     {
         $graphpinator = new \Graphpinator\Graphpinator(
-            $this->getSchema(),
+            self::getSchema(),
             false,
             new \Graphpinator\Module\ModuleSet([new \Graphpinator\QueryCost\MaxNodesModule(262, ['limit', 'last', 'first'])]),
         );
@@ -262,12 +262,12 @@ final class MaxNodesModuleTest extends \PHPUnit\Framework\TestCase
         ])));
     }
 
-    private function getContainer() : \Graphpinator\SimpleContainer
+    private static function getContainer() : \Graphpinator\SimpleContainer
     {
         return new \Graphpinator\SimpleContainer([self::getQuery(self::getTestType())], []);
     }
 
-    private function getSchema() : \Graphpinator\Typesystem\Schema
+    private static function getSchema() : \Graphpinator\Typesystem\Schema
     {
         return new \Graphpinator\Typesystem\Schema(self::getContainer(), self::getQuery(self::getTestType()));
     }

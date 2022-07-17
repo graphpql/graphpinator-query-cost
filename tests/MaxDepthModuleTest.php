@@ -58,7 +58,7 @@ final class MaxDepthModuleTest extends \PHPUnit\Framework\TestCase
                     ),
                     \Graphpinator\Typesystem\Field\ResolvableField::create(
                         'scalar',
-                        \Graphpinator\Container\Container::Int()->notNull(),
+                        \Graphpinator\Typesystem\Container::Int()->notNull(),
                         static function ($parent) : int {
                             return 1;
                         },
@@ -88,14 +88,14 @@ final class MaxDepthModuleTest extends \PHPUnit\Framework\TestCase
                 return new \Graphpinator\Typesystem\Field\ResolvableFieldSet([
                     \Graphpinator\Typesystem\Field\ResolvableField::create(
                         'field',
-                        \Graphpinator\Container\Container::String()->notNull(),
+                        \Graphpinator\Typesystem\Container::String()->notNull(),
                         static function ($parent) : string {
                             return 'testValue';
                         },
                     ),
                     \Graphpinator\Typesystem\Field\ResolvableField::create(
                         'scalar',
-                        \Graphpinator\Container\Container::Int()->notNull(),
+                        \Graphpinator\Typesystem\Container::Int()->notNull(),
                         static function ($parent) : int {
                             return 1;
                         },
@@ -132,13 +132,11 @@ final class MaxDepthModuleTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @dataProvider simpleDataProvider
-     * @param \Infinityloop\Utils\Json $request
-     * @param \Infinityloop\Utils\Json $expected
      */
     public function testSimple(Json $request, Json $expected) : void
     {
         $graphpinator = new \Graphpinator\Graphpinator(
-            $this->getSchema(),
+            self::getSchema(),
             false,
             new \Graphpinator\Module\ModuleSet([new \Graphpinator\QueryCost\MaxDepthModule(5)]),
         );
@@ -157,7 +155,7 @@ final class MaxDepthModuleTest extends \PHPUnit\Framework\TestCase
         $this->expectException(\Graphpinator\QueryCost\Exception\MaximalDepthWasReached::class);
 
         $graphpinator = new \Graphpinator\Graphpinator(
-            $this->getSchema(),
+            self::getSchema(),
             false,
             new \Graphpinator\Module\ModuleSet([new \Graphpinator\QueryCost\MaxDepthModule(2)]),
         );
@@ -166,12 +164,12 @@ final class MaxDepthModuleTest extends \PHPUnit\Framework\TestCase
         ])));
     }
 
-    private function getContainer() : \Graphpinator\SimpleContainer
+    private static function getContainer() : \Graphpinator\SimpleContainer
     {
         return new \Graphpinator\SimpleContainer([self::getQuery(self::getTestType())], []);
     }
 
-    private function getSchema() : \Graphpinator\Typesystem\Schema
+    private static function getSchema() : \Graphpinator\Typesystem\Schema
     {
         return new \Graphpinator\Typesystem\Schema(self::getContainer(), self::getQuery(self::getTestType()));
     }
