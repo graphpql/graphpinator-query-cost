@@ -6,8 +6,6 @@ namespace Graphpinator\QueryCost;
 
 final class MaxNodesModule implements \Graphpinator\Module\Module
 {
-    use \Nette\SmartObject;
-
     public function __construct(
         private int $maxQueryCost,
         private array $limitArgumentNames = ['limit', 'first', 'last'],

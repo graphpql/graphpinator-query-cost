@@ -6,8 +6,6 @@ namespace Graphpinator\QueryCost;
 
 final class MaxDepthModule implements \Graphpinator\Module\Module
 {
-    use \Nette\SmartObject;
-
     public function __construct(
         private int $maxDepth,
     )
