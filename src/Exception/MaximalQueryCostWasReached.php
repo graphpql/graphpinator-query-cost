@@ -10,9 +10,7 @@ class MaximalQueryCostWasReached extends \Graphpinator\Exception\GraphpinatorBas
 
     public function __construct(int $maxQueryCost)
     {
-        $this->messageArgs = [$maxQueryCost];
-
-        parent::__construct();
+        parent::__construct([$maxQueryCost]);
     }
 
     public function isOutputable() : bool

@@ -10,9 +10,7 @@ class MaximalDepthWasReached extends \Graphpinator\Exception\GraphpinatorBase
 
     public function __construct(int $maxDepth)
     {
-        $this->messageArgs = [$maxDepth];
-
-        parent::__construct();
+        parent::__construct([$maxDepth]);
     }
 
     public function isOutputable() : bool
