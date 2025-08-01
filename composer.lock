@@ -1557,16 +1557,16 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "2.1.6",
+            "version": "2.1.21",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan.git",
-                "reference": "6eaec7c6c9e90dcfe46ad1e1ffa5171e2dab641c"
+                "reference": "1ccf445757458c06a04eb3f803603cb118fe5fa6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/6eaec7c6c9e90dcfe46ad1e1ffa5171e2dab641c",
-                "reference": "6eaec7c6c9e90dcfe46ad1e1ffa5171e2dab641c",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/1ccf445757458c06a04eb3f803603cb118fe5fa6",
+                "reference": "1ccf445757458c06a04eb3f803603cb118fe5fa6",
                 "shasum": ""
             },
             "require": {
@@ -1611,7 +1611,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-02-19T15:46:42+00:00"
+            "time": "2025-07-28T19:35:08+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -4342,10 +4342,10 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": [],
-    "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "platform": {},
+    "platform-dev": {},
+    "plugin-api-version": "2.6.0"
 }
