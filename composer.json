@@ -14,8 +14,7 @@
   "require": {
     "infinityloop-dev/graphpinator": "^2.0",
     "infinityloop-dev/graphpinator-common": "^2.0",
-    "infinityloop-dev/graphpinator-parser": "^2.0",
-    "infinityloop-dev/utils": "^2.3"
+    "infinityloop-dev/graphpinator-parser": "^2.0"
   },
   "require-dev": {
     "infection/infection": "^0.29",
@@ -27,7 +26,8 @@
     "phpunit/phpunit": "^10.4",
     "shipmonk/composer-dependency-analyser": "^1.8",
     "thecodingmachine/phpstan-safe-rule": "^1.4",
-    "webthinx/codestyle": "^1.1"
+    "webthinx/codestyle": "^1.1",
+    "infinityloop-dev/utils": "^2.3"
   },
   "scripts": {
     "phpunit": "phpunit tests",
