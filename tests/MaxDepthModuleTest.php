@@ -4,15 +4,29 @@ declare(strict_types = 1);
 
 namespace Graphpinator\QueryCost\Tests;
 
-use \Infinityloop\Utils\Json;
+use Graphpinator\Graphpinator;
+use Graphpinator\Module\ModuleSet;
+use Graphpinator\QueryCost\Exception\MaximalDepthWasReached;
+use Graphpinator\QueryCost\MaxDepthModule;
+use Graphpinator\Request\JsonRequestFactory;
+use Graphpinator\SimpleContainer;
+use Graphpinator\Typesystem\Container;
+use Graphpinator\Typesystem\Field\ResolvableField;
+use Graphpinator\Typesystem\Field\ResolvableFieldSet;
+use Graphpinator\Typesystem\Schema;
+use Graphpinator\Typesystem\Type;
+use Infinityloop\Utils\Json;
+use PHPUnit\Framework\TestCase;
 
-final class MaxDepthModuleTest extends \PHPUnit\Framework\TestCase
+final class MaxDepthModuleTest extends TestCase
 {
-    public static function getQuery($type) : \Graphpinator\Typesystem\Type
+    public static ?Type $query = null;
+
+    public static function getQuery($type) : Type
     {
-        return new class ($type) extends \Graphpinator\Typesystem\Type {
+        return self::$query ??= new class ($type) extends Type {
             public function __construct(
-                private \Graphpinator\Typesystem\Type $type,
+                private Type $type,
             )
             {
                 parent::__construct();
@@ -23,10 +37,10 @@ final class MaxDepthModuleTest extends \PHPUnit\Framework\TestCase
                 return true;
             }
 
-            protected function getFieldDefinition() : \Graphpinator\Typesystem\Field\ResolvableFieldSet
+            protected function getFieldDefinition() : ResolvableFieldSet
             {
-                return new \Graphpinator\Typesystem\Field\ResolvableFieldSet([
-                    \Graphpinator\Typesystem\Field\ResolvableField::create(
+                return new ResolvableFieldSet([
+                    ResolvableField::create(
                         'field',
                         $this->type->notNull(),
                         static function ($parent) : int {
@@ -38,32 +52,32 @@ final class MaxDepthModuleTest extends \PHPUnit\Framework\TestCase
         };
     }
 
-    public static function getTestType() : \Graphpinator\Typesystem\Type
+    public static function getTestType() : Type
     {
-        return new class extends \Graphpinator\Typesystem\Type {
+        return new class extends Type {
             public function validateNonNullValue(mixed $rawValue) : bool
             {
                 return true;
             }
 
-            protected function getFieldDefinition() : \Graphpinator\Typesystem\Field\ResolvableFieldSet
+            protected function getFieldDefinition() : ResolvableFieldSet
             {
-                return new \Graphpinator\Typesystem\Field\ResolvableFieldSet([
-                    \Graphpinator\Typesystem\Field\ResolvableField::create(
+                return new ResolvableFieldSet([
+                    ResolvableField::create(
                         'field',
                         $this,
                         static function ($parent) : int {
                             return 1;
                         },
                     ),
-                    \Graphpinator\Typesystem\Field\ResolvableField::create(
+                    ResolvableField::create(
                         'scalar',
-                        \Graphpinator\Typesystem\Container::Int()->notNull(),
+                        Container::Int()->notNull(),
                         static function ($parent) : int {
                             return 1;
                         },
                     ),
-                    \Graphpinator\Typesystem\Field\ResolvableField::create(
+                    ResolvableField::create(
                         'simpleField',
                         MaxDepthModuleTest::getSimpleType(),
                         static function ($parent) : int {
@@ -75,27 +89,27 @@ final class MaxDepthModuleTest extends \PHPUnit\Framework\TestCase
         };
     }
 
-    public static function getSimpleType() : \Graphpinator\Typesystem\Type
+    public static function getSimpleType() : Type
     {
-        return new class extends \Graphpinator\Typesystem\Type {
+        return new class extends Type {
             public function validateNonNullValue(mixed $rawValue) : bool
             {
                 return true;
             }
 
-            protected function getFieldDefinition() : \Graphpinator\Typesystem\Field\ResolvableFieldSet
+            protected function getFieldDefinition() : ResolvableFieldSet
             {
-                return new \Graphpinator\Typesystem\Field\ResolvableFieldSet([
-                    \Graphpinator\Typesystem\Field\ResolvableField::create(
+                return new ResolvableFieldSet([
+                    ResolvableField::create(
                         'field',
-                        \Graphpinator\Typesystem\Container::String()->notNull(),
+                        Container::String()->notNull(),
                         static function ($parent) : string {
                             return 'testValue';
                         },
                     ),
-                    \Graphpinator\Typesystem\Field\ResolvableField::create(
+                    ResolvableField::create(
                         'scalar',
-                        \Graphpinator\Typesystem\Container::Int()->notNull(),
+                        Container::Int()->notNull(),
                         static function ($parent) : int {
                             return 1;
                         },
@@ -109,10 +123,10 @@ final class MaxDepthModuleTest extends \PHPUnit\Framework\TestCase
     {
         return [
             [
-                \Infinityloop\Utils\Json::fromNative((object) [
+                Json::fromNative((object) [
                     'query' => '{ field { field { field { scalar simpleField { scalar field } } } } }',
                 ]),
-                \Infinityloop\Utils\Json::fromNative(
+                Json::fromNative(
                     (object) [
                         'data' => [
                             'field' => [
@@ -135,42 +149,42 @@ final class MaxDepthModuleTest extends \PHPUnit\Framework\TestCase
      */
     public function testSimple(Json $request, Json $expected) : void
     {
-        $graphpinator = new \Graphpinator\Graphpinator(
+        $graphpinator = new Graphpinator(
             self::getSchema(),
             false,
-            new \Graphpinator\Module\ModuleSet([new \Graphpinator\QueryCost\MaxDepthModule(5)]),
+            new ModuleSet([new MaxDepthModule(5)]),
         );
-        $result = $graphpinator->run(new \Graphpinator\Request\JsonRequestFactory($request));
+        $result = $graphpinator->run(new JsonRequestFactory($request));
 
         self::assertSame($expected->toString(), $result->toString());
     }
 
     public function testInvalid() : void
     {
-        $exception = new \Graphpinator\QueryCost\Exception\MaximalDepthWasReached(5);
+        $exception = new MaximalDepthWasReached(5);
 
         self::assertSame('Maximal fields depth 5 was reached.', $exception->getMessage());
         self::assertTrue($exception->isOutputable());
 
-        $this->expectException(\Graphpinator\QueryCost\Exception\MaximalDepthWasReached::class);
+        $this->expectException(MaximalDepthWasReached::class);
 
-        $graphpinator = new \Graphpinator\Graphpinator(
+        $graphpinator = new Graphpinator(
             self::getSchema(),
             false,
-            new \Graphpinator\Module\ModuleSet([new \Graphpinator\QueryCost\MaxDepthModule(2)]),
+            new ModuleSet([new MaxDepthModule(2)]),
         );
-        $graphpinator->run(new \Graphpinator\Request\JsonRequestFactory(\Infinityloop\Utils\Json::fromNative((object) [
+        $graphpinator->run(new JsonRequestFactory(Json::fromNative((object) [
              'query' => '{ field { field { field { scalar } } } }',
         ])));
     }
 
-    private static function getContainer() : \Graphpinator\SimpleContainer
+    private static function getContainer() : SimpleContainer
     {
-        return new \Graphpinator\SimpleContainer([self::getQuery(self::getTestType())], []);
+        return new SimpleContainer([self::getQuery(self::getTestType())], []);
     }
 
-    private static function getSchema() : \Graphpinator\Typesystem\Schema
+    private static function getSchema() : Schema
     {
-        return new \Graphpinator\Typesystem\Schema(self::getContainer(), self::getQuery(self::getTestType()));
+        return new Schema(self::getContainer(), self::getQuery(self::getTestType()));
     }
 }

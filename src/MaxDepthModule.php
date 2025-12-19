@@ -4,7 +4,19 @@ declare(strict_types = 1);
 
 namespace Graphpinator\QueryCost;
 
-final class MaxDepthModule implements \Graphpinator\Module\Module
+use Graphpinator\Module\Module;
+use Graphpinator\Normalizer\FinalizedRequest;
+use Graphpinator\Normalizer\NormalizedRequest;
+use Graphpinator\Normalizer\Selection\Field;
+use Graphpinator\Normalizer\Selection\FragmentSpread;
+use Graphpinator\Normalizer\Selection\InlineFragment;
+use Graphpinator\Normalizer\Selection\SelectionSet;
+use Graphpinator\Parser\ParsedRequest;
+use Graphpinator\QueryCost\Exception\MaximalDepthWasReached;
+use Graphpinator\Request\Request;
+use Graphpinator\Resolver\Result;
+
+final class MaxDepthModule implements Module
 {
     public function __construct(
         private int $maxDepth,
@@ -12,17 +24,20 @@ final class MaxDepthModule implements \Graphpinator\Module\Module
     {
     }
 
-    public function processRequest(\Graphpinator\Request\Request $request) : \Graphpinator\Request\Request
+    #[\Override]
+    public function processRequest(Request $request) : Request
     {
         return $request;
     }
 
-    public function processParsed(\Graphpinator\Parser\ParsedRequest $request) : \Graphpinator\Parser\ParsedRequest
+    #[\Override]
+    public function processParsed(ParsedRequest $request) : ParsedRequest
     {
         return $request;
     }
 
-    public function processNormalized(\Graphpinator\Normalizer\NormalizedRequest $request) : \Graphpinator\Normalizer\NormalizedRequest
+    #[\Override]
+    public function processNormalized(NormalizedRequest $request) : NormalizedRequest
     {
         foreach ($request->getOperations() as $operation) {
             $this->validateDepth(1, $operation->getSelections());
@@ -31,25 +46,27 @@ final class MaxDepthModule implements \Graphpinator\Module\Module
         return $request;
     }
 
-    public function processFinalized(\Graphpinator\Normalizer\FinalizedRequest $request) : \Graphpinator\Normalizer\FinalizedRequest
+    #[\Override]
+    public function processFinalized(FinalizedRequest $request) : FinalizedRequest
     {
         return $request;
     }
 
-    public function processResult(\Graphpinator\Result $result) : \Graphpinator\Result
+    #[\Override]
+    public function processResult(Result $result) : Result
     {
         return $result;
     }
 
-    private function validateDepth(int $fieldDepth, \Graphpinator\Normalizer\Selection\SelectionSet $selectionSet) : void
+    private function validateDepth(int $fieldDepth, SelectionSet $selectionSet) : void
     {
         if ($fieldDepth > $this->maxDepth) {
-            throw new \Graphpinator\QueryCost\Exception\MaximalDepthWasReached($this->maxDepth);
+            throw new MaximalDepthWasReached($this->maxDepth);
         }
 
         foreach ($selectionSet as $selection) {
             switch ($selection::class) {
-                case \Graphpinator\Normalizer\Selection\Field::class:
+                case Field::class:
                     $currentFieldSet = $selection->getSelections();
 
                     if ($currentFieldSet === null) {
@@ -60,9 +77,9 @@ final class MaxDepthModule implements \Graphpinator\Module\Module
                     $this->validateDepth($nextDepth, $currentFieldSet);
 
                     break;
-                case \Graphpinator\Normalizer\Selection\FragmentSpread::class:
+                case FragmentSpread::class:
                     // fallthrough
-                case \Graphpinator\Normalizer\Selection\InlineFragment::class:
+                case InlineFragment::class:
                     $this->validateDepth($fieldDepth, $selection->getSelections());
 
                     break;

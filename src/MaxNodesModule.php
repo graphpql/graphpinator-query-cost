@@ -4,47 +4,65 @@ declare(strict_types = 1);
 
 namespace Graphpinator\QueryCost;
 
-final class MaxNodesModule implements \Graphpinator\Module\Module
+use Graphpinator\Module\Module;
+use Graphpinator\Normalizer\FinalizedRequest;
+use Graphpinator\Normalizer\NormalizedRequest;
+use Graphpinator\Normalizer\Selection\Field;
+use Graphpinator\Normalizer\Selection\FragmentSpread;
+use Graphpinator\Normalizer\Selection\InlineFragment;
+use Graphpinator\Normalizer\Selection\SelectionSet;
+use Graphpinator\Parser\ParsedRequest;
+use Graphpinator\QueryCost\Exception\MaximalQueryCostWasReached;
+use Graphpinator\Request\Request;
+use Graphpinator\Resolver\Result;
+
+final class MaxNodesModule implements Module
 {
     public function __construct(
         private int $maxQueryCost,
+        /** @var list<string> */
         private array $limitArgumentNames = ['limit', 'first', 'last'],
     )
     {
     }
 
-    public function processRequest(\Graphpinator\Request\Request $request) : \Graphpinator\Request\Request
+    #[\Override]
+    public function processRequest(Request $request) : Request
     {
         return $request;
     }
 
-    public function processParsed(\Graphpinator\Parser\ParsedRequest $request) : \Graphpinator\Parser\ParsedRequest
+    #[\Override]
+    public function processParsed(ParsedRequest $request) : ParsedRequest
     {
         return $request;
     }
 
-    public function processNormalized(\Graphpinator\Normalizer\NormalizedRequest $request) : \Graphpinator\Normalizer\NormalizedRequest
+    #[\Override]
+    public function processNormalized(NormalizedRequest $request) : NormalizedRequest
     {
         return $request;
     }
 
-    public function processFinalized(\Graphpinator\Normalizer\FinalizedRequest $request) : \Graphpinator\Normalizer\FinalizedRequest
+    #[\Override]
+    public function processFinalized(FinalizedRequest $request) : FinalizedRequest
     {
         $queryCost = $this->countSelectionSetCost($request->getOperation()->getSelections());
 
         if ($queryCost > $this->maxQueryCost) {
-            throw new \Graphpinator\QueryCost\Exception\MaximalQueryCostWasReached($queryCost);
+            throw new MaximalQueryCostWasReached($queryCost);
         }
 
         return $request;
     }
 
-    public function processResult(\Graphpinator\Result $result) : \Graphpinator\Result
+    #[\Override]
+    public function processResult(Result $result) : Result
     {
         return $result;
     }
 
-    private function countFieldCost(\Graphpinator\Normalizer\Selection\Field $field) : int
+    private function countFieldCost(Field $field) : int
     {
         $currentFields = $field->getSelections();
 
@@ -71,25 +89,26 @@ final class MaxNodesModule implements \Graphpinator\Module\Module
         return ($fieldSetCost + 1) * $multiplier;
     }
 
-    private function countFragmentSpreadCost(\Graphpinator\Normalizer\Selection\FragmentSpread $fragmentSpread) : int
+    private function countFragmentSpreadCost(FragmentSpread $fragmentSpread) : int
     {
         return $this->countSelectionSetCost($fragmentSpread->getSelections());
     }
 
-    private function countInlineFragmentCost(\Graphpinator\Normalizer\Selection\InlineFragment $inlineFragment) : int
+    private function countInlineFragmentCost(InlineFragment $inlineFragment) : int
     {
         return $this->countSelectionSetCost($inlineFragment->getSelections());
     }
 
-    private function countSelectionSetCost(\Graphpinator\Normalizer\Selection\SelectionSet $selectionSet) : int
+    private function countSelectionSetCost(SelectionSet $selectionSet) : int
     {
         $cost = 0;
 
         foreach ($selectionSet as $selection) {
             $cost += match ($selection::class) {
-                \Graphpinator\Normalizer\Selection\Field::class => $this->countFieldCost($selection),
-                \Graphpinator\Normalizer\Selection\FragmentSpread::class => $this->countFragmentSpreadCost($selection),
-                \Graphpinator\Normalizer\Selection\InlineFragment::class => $this->countInlineFragmentCost($selection),
+                Field::class => $this->countFieldCost($selection),
+                FragmentSpread::class => $this->countFragmentSpreadCost($selection),
+                InlineFragment::class => $this->countInlineFragmentCost($selection),
+                default => throw new \LogicException('Unknown selection type'),
             };
         }
 
