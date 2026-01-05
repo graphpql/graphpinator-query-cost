@@ -66,7 +66,7 @@ final class MaxDepthModuleTest extends TestCase
                     ResolvableField::create(
                         'field',
                         $this,
-                        static function ($parent) : int {
+                        static function ($parent) : ?int {
                             return 1;
                         },
                     ),
@@ -80,7 +80,7 @@ final class MaxDepthModuleTest extends TestCase
                     ResolvableField::create(
                         'simpleField',
                         MaxDepthModuleTest::getSimpleType(),
-                        static function ($parent) : int {
+                        static function ($parent) : ?int {
                             return 1;
                         },
                     ),

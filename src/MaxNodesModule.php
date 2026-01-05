@@ -47,7 +47,7 @@ final class MaxNodesModule implements Module
     #[\Override]
     public function processFinalized(FinalizedRequest $request) : FinalizedRequest
     {
-        $queryCost = $this->countSelectionSetCost($request->getOperation()->getSelections());
+        $queryCost = $this->countSelectionSetCost($request->operation->children);
 
         if ($queryCost > $this->maxQueryCost) {
             throw new MaximalQueryCostWasReached($queryCost);
@@ -64,19 +64,19 @@ final class MaxNodesModule implements Module
 
     private function countFieldCost(Field $field) : int
     {
-        $currentFields = $field->getSelections();
+        $currentFields = $field->children;
 
         if ($currentFields === null) {
             return 1;
         }
 
         $fieldSetCost = $this->countSelectionSetCost($currentFields);
-        $currentArguments = $field->getArguments();
+        $currentArguments = $field->arguments;
         $multiplier = 1;
 
         foreach ($currentArguments as $argument) {
-            if (\in_array($argument->getArgument()->getName(), $this->limitArgumentNames, true)) {
-                $argumentRawValue = $argument->getValue()->getRawValue();
+            if (\in_array($argument->argument->getName(), $this->limitArgumentNames, true)) {
+                $argumentRawValue = $argument->value->getRawValue();
 
                 if (\is_int($argumentRawValue) && $argumentRawValue > 0) {
                     $multiplier = $argumentRawValue;
@@ -91,12 +91,12 @@ final class MaxNodesModule implements Module
 
     private function countFragmentSpreadCost(FragmentSpread $fragmentSpread) : int
     {
-        return $this->countSelectionSetCost($fragmentSpread->getSelections());
+        return $this->countSelectionSetCost($fragmentSpread->children);
     }
 
     private function countInlineFragmentCost(InlineFragment $inlineFragment) : int
     {
-        return $this->countSelectionSetCost($inlineFragment->getSelections());
+        return $this->countSelectionSetCost($inlineFragment->children);
     }
 
     private function countSelectionSetCost(SelectionSet $selectionSet) : int

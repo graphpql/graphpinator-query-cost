@@ -65,7 +65,7 @@ final class MaxNodesModuleTest extends TestCase
                     ResolvableField::create(
                         'fieldA',
                         $this,
-                        static function ($parent, $limit) : int {
+                        static function ($parent, $limit) : ?int {
                             return 1;
                         },
                     )->setArguments(new ArgumentSet([
@@ -77,7 +77,7 @@ final class MaxNodesModuleTest extends TestCase
                     ResolvableField::create(
                         'stringField',
                         $this,
-                        static function ($parent, $limit) : string {
+                        static function ($parent, $limit) : ?string {
                             return 'stringValue';
                         },
                     )->setArguments(new ArgumentSet([
@@ -89,7 +89,7 @@ final class MaxNodesModuleTest extends TestCase
                     ResolvableField::create(
                         'fieldB',
                         $this,
-                        static function ($parent, $first) : int {
+                        static function ($parent, $first) : ?int {
                             return 1;
                         },
                     )->setArguments(new ArgumentSet([
@@ -101,7 +101,7 @@ final class MaxNodesModuleTest extends TestCase
                     ResolvableField::create(
                         'fieldC',
                         $this,
-                        static function ($parent, $last) : int {
+                        static function ($parent, $last) : ?int {
                             return $last;
                         },
                     )->setArguments(new ArgumentSet([
@@ -132,13 +132,15 @@ final class MaxNodesModuleTest extends TestCase
                     ResolvableField::create(
                         'emptyField',
                         MaxNodesModuleTest::getOneFieldType(),
-                        static function ($parent) : void {
+                        static function ($parent) : null {
+                            return null;
                         },
                     ),
                     ResolvableField::create(
                         'multipleArgumentField',
                         $this,
-                        static function ($parent, $limit, $last, $first) : void {
+                        static function ($parent, $limit, $last, $first) : null {
+                            return null;
                         },
                     )->setArguments(new ArgumentSet([
                         Argument::create(
@@ -157,7 +159,8 @@ final class MaxNodesModuleTest extends TestCase
                     ResolvableField::create(
                         'lastField',
                         $this,
-                        static function ($parent, $limit) : void {
+                        static function ($parent, $limit) : null {
+                            return null;
                         },
                     )->setArguments(new ArgumentSet([
                         Argument::create(

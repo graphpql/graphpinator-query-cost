@@ -39,8 +39,8 @@ final class MaxDepthModule implements Module
     #[\Override]
     public function processNormalized(NormalizedRequest $request) : NormalizedRequest
     {
-        foreach ($request->getOperations() as $operation) {
-            $this->validateDepth(1, $operation->getSelections());
+        foreach ($request->operations as $operation) {
+            $this->validateDepth(1, $operation->children);
         }
 
         return $request;
@@ -67,7 +67,7 @@ final class MaxDepthModule implements Module
         foreach ($selectionSet as $selection) {
             switch ($selection::class) {
                 case Field::class:
-                    $currentFieldSet = $selection->getSelections();
+                    $currentFieldSet = $selection->children;
 
                     if ($currentFieldSet === null) {
                         continue 2;
@@ -80,7 +80,7 @@ final class MaxDepthModule implements Module
                 case FragmentSpread::class:
                     // fallthrough
                 case InlineFragment::class:
-                    $this->validateDepth($fieldDepth, $selection->getSelections());
+                    $this->validateDepth($fieldDepth, $selection->children);
 
                     break;
             }
